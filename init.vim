@@ -42,6 +42,9 @@ Plugin 'roxma/vim-tmux-clipboard'
 " /vim-nerdtree-syntax-highlight
 Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
 
+" jistr/vim-nerdtree-tabs
+Plugin 'jistr/vim-nerdtree-tabs'
+
 " vim-devicons
 Plugin 'ryanoasis/vim-devicons'
 " editorconfig
@@ -55,9 +58,12 @@ filetype plugin indent on
 """"""" Jedi-VIM """""""
 " Don't mess up undo history
 let g:jedi#show_call_signatures = "0"
-let g:jedi#force_py_version = 2
-let g:jedi#loader_py_version = 2
-let g:python2_host_prog = '/usr/bin/python'
+let g:python_version = matchstr(system("python --version | cut -f2 -d' '"), '^[0-9]')
+if g:python_version =~ 3
+    let g:python2_host_prog = "/usr/bin/python"
+else
+    let g:python3_host_prog = "~/.pyenv/shims/python"
+endif
 
 """"""" SuperTab configuration """""""
 "let g:SuperTabDefaultCompletionType = "<c-x><c-u>"
@@ -127,6 +133,7 @@ autocmd BufNewFile,BufRead *.tex,*.bib imap <buffer> <C-b> <Esc><C-b>
 
 
 " nerdtree config
+nmap <F2> :NERDTreeToggle<CR>
 "autocmd vimenter * NERDTree
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in") | exe 'NERDTree' argv()[0] | wincmd p | ene | endif
@@ -138,3 +145,60 @@ let g:NERDTreeHighlightFolders = 1 " enables folder icon highlighting using exac
 let g:NERDTreeHighlightFoldersFullName = 1 " highlights the folder name
 
 hi Directory guifg=#FF0000 ctermfg=red
+
+" nerdtree tabs startup
+let g:nerdtree_tabs_open_on_console_startup=1
+
+" " 让输入上方，搜索列表在下方
+let $FZF_DEFAULT_OPTS = '--layout=reverse'
+
+" 打开 fzf 的方式选择 floating window
+let g:fzf_layout = { 'window': 'call OpenFloatingWin()' }
+
+
+function! OpenFloatingWin()
+  let height = &lines - 3
+  let width = float2nr(&columns - (&columns * 2 / 10))
+  let col = float2nr((&columns - width) / 2)
+
+  " 设置浮动窗口打开的位置，大小等。
+  " 这里的大小配置可能不是那么的 flexible 有继续改进的空间
+  let opts = {
+        \ 'relative': 'editor',
+        \ 'row': height * 0.3,
+        \ 'col': col + 30,
+        \ 'width': width * 4 / 5,
+        \ 'height': height / 2
+        \ }
+
+  let buf = nvim_create_buf(v:false, v:true)
+  let win = nvim_open_win(buf, v:true, opts)
+
+  " 设置浮动窗口高亮
+  call setwinvar(win, '&winhl', 'Normal:Pmenu')
+
+  setlocal
+        \ buftype=nofile
+        \ nobuflisted
+        \ bufhidden=hide
+        \ nonumber
+        \ norelativenumber
+        \ signcolumn=no
+endfunction
+
+" available highlighting options
+let g:go_highlight_build_constraints = 1
+let g:go_highlight_extra_types = 1
+let g:go_highlight_fields = 1
+let g:go_highlight_functions = 1
+let g:go_highlight_methods = 1
+let g:go_highlight_operators = 1
+let g:go_highlight_structs = 1
+let g:go_highlight_types = 1
+
+let g:go_auto_sameids = 1
+" Error and warning signs.
+let g:ale_sign_error = '⤫'
+let g:ale_sign_warning = '⚠'
+" Enable integration with airline.
+let g:airline#extensions#ale#enabled = 1
